@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\Applicant\RankingController as ApplicantRankingCont
 use App\Http\Controllers\Api\Applicant\DispatchOfferController as ApplicantDispatchOfferController;
 use App\Http\Controllers\Api\Chief\DispatchRequestController as ChiefDispatchRequestController;
 use App\Http\Controllers\Api\Admin\ApplicationManagementController;
+use App\Http\Controllers\Api\Admin\ExamSessionController;
+use App\Http\Controllers\Api\Admin\QuestionBankController;
 use App\Http\Controllers\Api\Admin\ExamManagementController;
 use App\Http\Controllers\Api\Admin\RankingController as AdminRankingController;
 use App\Http\Controllers\Api\Admin\DispatchManagementController;
@@ -48,11 +50,13 @@ Route::middleware(['auth:sanctum', 'role:applicant'])->prefix('applicant')->grou
     Route::post('/application/upload', [ApplicationController::class, 'uploadDocument']);
     Route::get('/application/status', [ApplicationController::class, 'getStatus']);
 
-    Route::get('/exam/session', [ExamController::class, 'getSession']);
-    Route::post('/exam/start', [ExamController::class, 'start']);
+    Route::get('/exam/assignment', [ExamController::class, 'getAssignment']);
+    Route::post('/exam/check-in', [ExamController::class, 'checkIn']);
+    Route::post('/exam/start', [ExamController::class, 'startExam']);
+    Route::get('/exam/questions/{section}', [ExamController::class, 'getQuestions']);
     Route::post('/exam/answer', [ExamController::class, 'submitAnswer']);
-    Route::post('/exam/complete-section', [ExamController::class, 'completeSection']);
-    Route::get('/exam/status', [ExamController::class, 'getStatus']);
+    Route::post('/exam/complete-section/{section}', [ExamController::class, 'completeSection']);
+    Route::post('/exam/complete', [ExamController::class, 'completeExam']);
 
     Route::get('/ranking', [ApplicantRankingController::class, 'getMyRanking']);
 
@@ -77,18 +81,23 @@ Route::middleware(['auth:sanctum', 'role:admin|super_admin'])->prefix('admin')->
     Route::get('/applications/{id}/document/{type}', [ApplicationManagementController::class, 'downloadDocument']);
     Route::get('/applications/export', [ApplicationManagementController::class, 'export']);
 
-    // Exam Management
-    Route::post('/exam-sessions', [ExamManagementController::class, 'createSession']);
-    Route::get('/exam-sessions', [ExamManagementController::class, 'getSessions']);
-    Route::get('/exam-results', [ExamManagementController::class, 'getResults']);
-    Route::post('/exam-results/export', [ExamManagementController::class, 'exportResults']);
+    // Exam Session Management
+    Route::get('/exam-sessions', [ExamSessionController::class, 'index']);
+    Route::post('/exam-sessions', [ExamSessionController::class, 'store']);
+    Route::get('/exam-sessions/{id}', [ExamSessionController::class, 'show']);
+    Route::put('/exam-sessions/{id}', [ExamSessionController::class, 'update']);
+    Route::delete('/exam-sessions/{id}', [ExamSessionController::class, 'destroy']);
+    Route::post('/exam-sessions/{id}/assign', [ExamSessionController::class, 'assignApplicants']);
+    Route::post('/exam-sessions/auto-assign', [ExamSessionController::class, 'autoAssign']);
 
-    // Question Bank
-    Route::get('/questions', [ExamManagementController::class, 'getQuestions']);
-    Route::post('/questions', [ExamManagementController::class, 'createQuestion']);
-    Route::put('/questions/{id}', [ExamManagementController::class, 'updateQuestion']);
-    Route::delete('/questions/{id}', [ExamManagementController::class, 'deleteQuestion']);
-    Route::post('/questions/import', [ExamManagementController::class, 'importQuestions']);
+    // Question Bank Management
+    Route::get('/questions', [QuestionBankController::class, 'index']);
+    Route::post('/questions', [QuestionBankController::class, 'store']);
+    Route::get('/questions/{id}', [QuestionBankController::class, 'show']);
+    Route::put('/questions/{id}', [QuestionBankController::class, 'update']);
+    Route::delete('/questions/{id}', [QuestionBankController::class, 'destroy']);
+    Route::post('/questions/import', [QuestionBankController::class, 'importQuestions']);
+    Route::get('/questions/statistics', [QuestionBankController::class, 'statistics']);
 
     // Rankings
     Route::post('/rankings/generate', [AdminRankingController::class, 'generate']);

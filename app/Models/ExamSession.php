@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use OwenIt\Auditing\Contracts\Auditable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ExamSession extends Model implements Auditable
+class ExamSession extends Model
 {
-    use HasFactory, \OwenIt\Auditing\Auditable;
+    use HasFactory;
 
     protected $fillable = [
         'date',
@@ -27,26 +27,28 @@ class ExamSession extends Model implements Auditable
         'end_time' => 'datetime:H:i',
     ];
 
-    // Relationships
-    public function assignments()
+    public function assignments(): HasMany
     {
         return $this->hasMany(ExamAssignment::class);
     }
 
-    public function attempts()
+    public function attempts(): HasMany
     {
         return $this->hasMany(ExamAttempt::class);
     }
 
-    // Check if session has available spots
-    public function hasAvailableSpots(): bool
+    public function isFull(): bool
     {
-        return $this->filled_count < $this->capacity;
+        return $this->filled_count >= $this->capacity;
     }
 
-    // Increment filled count
     public function incrementFilledCount(): void
     {
         $this->increment('filled_count');
+    }
+
+    public function decrementFilledCount(): void
+    {
+        $this->decrement('filled_count');
     }
 }

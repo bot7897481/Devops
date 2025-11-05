@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use OwenIt\Auditing\Contracts\Auditable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ExamQuestion extends Model implements Auditable
+class ExamQuestion extends Model
 {
-    use HasFactory, \OwenIt\Auditing\Auditable;
+    use HasFactory;
 
     protected $fillable = [
         'section',
@@ -28,30 +28,43 @@ class ExamQuestion extends Model implements Auditable
         'tags' => 'array',
     ];
 
-    // Relationships
-    public function responses()
+    public function responses(): HasMany
     {
         return $this->hasMany(ExamResponse::class, 'question_id');
     }
 
-    // Check if answer is correct
-    public function isCorrectAnswer(string $answer): bool
-    {
-        return strtolower($answer) === strtolower($this->correct_answer);
-    }
-
-    // Increment usage count
     public function incrementUsage(): void
     {
         $this->increment('times_used');
     }
 
-    // Get random questions for a section
-    public static function getRandomQuestionsForSection(string $section, int $count): \Illuminate\Database\Eloquent\Collection
+    public function checkAnswer(string $selectedAnswer): bool
     {
-        return self::where('section', $section)
-            ->inRandomOrder()
-            ->limit($count)
-            ->get();
+        return $this->correct_answer === $selectedAnswer;
+    }
+
+    public function getSectionTimeLimit(): int
+    {
+        // Returns time limit in minutes
+        return match($this->section) {
+            'reading' => 25,
+            'math_computation' => 9,
+            'applied_math' => 25,
+            'language' => 18,
+            'aptitude' => 20,
+            default => 20,
+        };
+    }
+
+    public function getSectionQuestionCount(): int
+    {
+        return match($this->section) {
+            'reading' => 25,
+            'math_computation' => 15,
+            'applied_math' => 25,
+            'language' => 25,
+            'aptitude' => 36,
+            default => 25,
+        };
     }
 }

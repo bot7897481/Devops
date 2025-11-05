@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExamResponse extends Model
 {
     use HasFactory;
+
+    public $timestamps = false;
 
     protected $fillable = [
         'exam_attempt_id',
@@ -25,14 +28,23 @@ class ExamResponse extends Model
         'answered_at' => 'datetime',
     ];
 
-    // Relationships
-    public function examAttempt()
+    public function examAttempt(): BelongsTo
     {
         return $this->belongsTo(ExamAttempt::class);
     }
 
-    public function question()
+    public function question(): BelongsTo
     {
-        return $this->belongsTo(ExamQuestion::class);
+        return $this->belongsTo(ExamQuestion::class, 'question_id');
+    }
+
+    public function recordAnswer(string $answer, int $timeSpent): void
+    {
+        $this->update([
+            'selected_answer' => $answer,
+            'is_correct' => $this->question->checkAnswer($answer),
+            'time_spent' => $timeSpent,
+            'answered_at' => now(),
+        ]);
     }
 }
