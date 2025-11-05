@@ -74,6 +74,7 @@ Route::middleware(['auth:sanctum', 'role:admin|super_admin'])->prefix('admin')->
     Route::get('/applications/{id}', [ApplicationManagementController::class, 'show']);
     Route::post('/applications/{id}/validate', [ApplicationManagementController::class, 'validate']);
     Route::post('/applications/{id}/capture-biometric', [ApplicationManagementController::class, 'captureBiometric']);
+    Route::get('/applications/{id}/document/{type}', [ApplicationManagementController::class, 'downloadDocument']);
     Route::get('/applications/export', [ApplicationManagementController::class, 'export']);
 
     // Exam Management
