@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  # PHP/Laravel Application with Nginx
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: local39_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    ports:
+      - "8000:80"
+      - "5173:5173"  # Vite dev server
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=local39_apprenticeship
+      - DB_USERNAME=local39user
+      - DB_PASSWORD=local39pass
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MAIL_HOST=mailpit
+      - MAIL_PORT=1025
+    depends_on:
+      - db
+      - redis
+      - mailpit
+    networks:
+      - local39_network
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: local39_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: local39_apprenticeship
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: local39user
+      MYSQL_PASSWORD: local39pass
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    ports:
+      - "3306:3306"
+    networks:
+      - local39_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: local39_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - local39_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mailpit for email testing
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: local39_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"  # Web UI
+      - "1025:1025"  # SMTP
+    networks:
+      - local39_network
+
+  # Node.js for Vite development (optional separate service)
+  # Uncomment if you want to run Vite in a separate container
+  # vite:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/vite/Dockerfile
+  #   container_name: local39_vite
+  #   restart: unless-stopped
+  #   working_dir: /var/www/html
+  #   volumes:
+  #     - ./:/var/www/html
+  #   ports:
+  #     - "5173:5173"
+  #   command: npm run dev -- --host
+  #   networks:
+  #     - local39_network
+
+  # PHPMyAdmin (optional - for database management)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: local39_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: local39user
+      PMA_PASSWORD: local39pass
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - local39_network
+
+networks:
+  local39_network:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
+  redisdata:
+    driver: local
