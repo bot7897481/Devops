@@ -77,6 +77,19 @@ This system replaces a fully paper-based process and provides:
 - MySQL/MariaDB
 - Git
 
+### Step 0: Clone the Repository
+
+```bash
+git clone <your-fork-or-repo-url>
+cd Devops
+
+# (Optional) verify you are in the project root
+ls
+# You should see files such as composer.json, package.json, artisan, and the .env.example template
+```
+
+If you do not see `composer.json` or `.env.example`, double-check that you cloned the correct repository and that you changed into the repository folder before running the remaining commands.
+
 ### Step 1: Install Dependencies
 
 ```bash
